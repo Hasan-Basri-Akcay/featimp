@@ -336,7 +336,29 @@ def get_feature_importances(data=None, num_features=None, cat_features=None, tar
         fi_df = get_fi_by_name(df_enc, method, pi_model_base, pi_score)
         return fi_df
     elif type(method) == list:
-        pass
+        fi_list = []
+        time_list = []
+        for m in method:
+            start_time = time.time()
+            fi_list.append(get_fi_by_name(df_enc, m, pi_model_base, pi_score))
+            if m == 'pi':
+                time_list.append(time.time() - start_time)
+                time_list.append(0)
+            else:
+                time_list.append(time.time() - start_time)
+        fi_df = pd.DataFrame()
+        for fi_temp in fi_list:
+            fi_df = fi_df.merge(fi_temp, left_index=True, right_index=True, how='outer')
+        
+        tt = pd.DataFrame(MinMaxScaler().fit_transform(fi_df), columns=fi_df.columns, index=fi_df.index)
+        if 'PI std' in list(tt.columns):
+            tt.drop('PI std', axis=1, inplace=True)
+        rank = tt.sum(axis=1) / len(tt.columns) 
+
+        fi_df['Rank'] = rank
+        fi_df.sort_values('Rank', ascending=False, inplace=True)
+        fi_df.loc['TT (Sec)'] = time_list + [0]
+        return fi_df
     else:
         print("Unknown method type!")
         print("method type should be string or list!")
