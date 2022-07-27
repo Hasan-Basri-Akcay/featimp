@@ -8,6 +8,7 @@ kaggle  :   <https://www.kaggle.com/hasanbasriakcay>
 import gc
 import pandas as pd
 import numpy as np
+from regex import R
 import scipy.stats as ss
 import time
 
@@ -34,6 +35,8 @@ from catboost import CatBoostRegressor
 
 
 def get_corr_importances(data=None, num_features=None, target='target'):
+    if len(num_features) < 1:
+        return pd.DataFrame(columns=['Corr'])
     corr = data[num_features].corrwith(data[target])
     corr_df = pd.DataFrame(corr, columns=['Corr'], index=num_features)
     corr_df.sort_values('Corr', ascending=False, inplace=True)
@@ -54,6 +57,9 @@ def get_chi2_crosstab_importances(data=None, cat_features=None, target='target')
         rcorr = r - ((r-1)**2)/(n-1)
         kcorr = k - ((k-1)**2)/(n-1)
         return np.sqrt(phi2corr / min( (kcorr-1), (rcorr-1)))
+    
+    if len(cat_features) < 1:
+        return pd.DataFrame(columns=['Chi_Square_Crosstab'])
         
     cat_corr_dict = {}
         
@@ -69,14 +75,17 @@ def get_chi2_crosstab_importances(data=None, cat_features=None, target='target')
 
 
 def get_chi2_importances(data=None, features=None, target='target'):
+    if len(features) < 1:
+        return pd.DataFrame(columns=['Chi_Square'])
     chi2_scores = chi2(data[features], data[[target]])
-    chi2_df = pd.DataFrame(chi2_scores[0], columns=['Neg_Chi_Square'], index=features)
-    chi2_df['Neg_Chi_Square'] = chi2_df['Neg_Chi_Square'] * -1
-    chi2_df.sort_values('Neg_Chi_Square', ascending=False, inplace=True)
+    chi2_df = pd.DataFrame(chi2_scores[0], columns=['Chi_Square'], index=features)
+    chi2_df.sort_values('Chi_Square', ascending=False, inplace=True)
     return chi2_df
 
 
 def get_anova_importances(data=None, features=None, target='target'):
+    if len(features) < 1:
+        return pd.DataFrame(columns=['ANOVA'])
     anova_scores = f_regression(data[features], data[[target]])
     anova_df = pd.DataFrame(anova_scores[0], columns=['ANOVA'], index=features)
     anova_df.sort_values('ANOVA', ascending=False, inplace=True)
@@ -84,6 +93,8 @@ def get_anova_importances(data=None, features=None, target='target'):
 
 
 def get_mutual_info_importances(data=None, features=None, target='target'):
+    if len(features) < 1:
+        return pd.DataFrame(columns=['MI Scores'])
     mi_scores = mutual_info_classif(data[features], data[target])
     mi_scores_df = pd.DataFrame(mi_scores, columns=["MI Scores"], index=features)
     mi_scores_df = mi_scores_df.sort_values('MI Scores', ascending=False)
@@ -165,7 +176,7 @@ def get_ml_importances(data=None, num_features=None, cat_features=None, target='
     return ml_importance_df
 
 def get_permutation_importances(data=None, features=None, target='target', group='group', fold_type='kf', 
-                                nfold=10, score='roc_auc', model_base=None, random_state=0, n_repeats=30):
+                                nfold=10, score='roc_auc', model_base=None, random_state=0, n_repeats=5):
     X = data[features]
     y = data[[target]]
 
@@ -207,8 +218,8 @@ def get_permutation_importances(data=None, features=None, target='target', group
     return permutation_importance_df
 
 
-def get_feature_importances(data=None, num_features=None, cat_features=None, target='target', group='group', method=[], fold_type='kf', 
-                            nfold=10, task='clf_multiable', random_state=0, ml_model_name='LGBM', ml_early_stopping_rounds=100, pi_score=None, pi_model_base=None, pi_n_repeats=30):
+def get_feature_importances(data=None, num_features=[], cat_features=[], target='target', group='group', method=[], fold_type='kf', nfold=10, 
+                            task='clf_multiable', random_state=0, ml_model_name='LGBM', ml_early_stopping_rounds=100, pi_score=None, pi_model_base=None, pi_n_repeats=5):
     def get_fi_by_name(data_inside, method_name, model_base, score):
         if method_name == 'corr':
             fi_df = get_corr_importances(data=data_inside, num_features=num_features, target=target)
@@ -270,6 +281,7 @@ def get_feature_importances(data=None, num_features=None, cat_features=None, tar
             else:
                 start_time = time.time()
                 corr_df = get_corr_importances(data=data_inside, num_features=num_features, target=target)
+                corr_df = corr_df.abs()
                 corr_time = time.time() - start_time
                 start_time = time.time()
                 anova_df = get_anova_importances(data=data_inside, features=cat_features, target=target)
