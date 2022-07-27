@@ -7,4 +7,4 @@ pip install featimp
 ```
 
 # Using featimp
----
+Detailed [Medium post](https://medium.com/@hasan.basri.akcay) on using featimp.
