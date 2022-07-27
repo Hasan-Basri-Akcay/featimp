@@ -11,6 +11,7 @@ import numpy as np
 from regex import R
 import scipy.stats as ss
 import time
+import random
 
 from sklearn.feature_selection import chi2
 from sklearn.feature_selection import f_regression
@@ -23,6 +24,7 @@ from sklearn.model_selection import GroupKFold
 
 from sklearn.base import clone
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import OrdinalEncoder
 from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
@@ -32,6 +34,9 @@ from lightgbm import LGBMClassifier
 from lightgbm import LGBMRegressor
 from catboost import CatBoostClassifier
 from catboost import CatBoostRegressor
+
+
+random.seed(10)
 
 
 def get_corr_importances(data=None, num_features=None, target='target'):
@@ -92,10 +97,10 @@ def get_anova_importances(data=None, features=None, target='target'):
     return anova_df
 
 
-def get_mutual_info_importances(data=None, features=None, target='target'):
+def get_mutual_info_importances(data=None, features=None, target='target', random_state=0):
     if len(features) < 1:
         return pd.DataFrame(columns=['MI Scores'])
-    mi_scores = mutual_info_classif(data[features], data[target])
+    mi_scores = mutual_info_classif(data[features], data[target], random_state=random_state)
     mi_scores_df = pd.DataFrame(mi_scores, columns=["MI Scores"], index=features)
     mi_scores_df = mi_scores_df.sort_values('MI Scores', ascending=False)
     return mi_scores_df
@@ -108,10 +113,10 @@ def get_ml_importances(data=None, num_features=None, cat_features=None, target='
     y = data[[target]]
 
     if fold_type == 'kf':
-        kf = KFold(n_splits=nfold)
+        kf = KFold(n_splits=nfold, random_state=random_state)
         fold_splits = kf.split(X)
     elif fold_type == 'skf':
-        skf = StratifiedKFold(n_splits=nfold)
+        skf = StratifiedKFold(n_splits=nfold, random_state=random_state)
         fold_splits = skf.split(X, y)
     elif fold_type == 'gkf':
         gkf = GroupKFold(n_splits=nfold)
@@ -181,10 +186,10 @@ def get_permutation_importances(data=None, features=None, target='target', group
     y = data[[target]]
 
     if fold_type == 'kf':
-        kf = KFold(n_splits=nfold)
+        kf = KFold(n_splits=nfold, random_state=random_state)
         fold_splits = kf.split(X)
     elif fold_type == 'skf':
-        skf = StratifiedKFold(n_splits=nfold)
+        skf = StratifiedKFold(n_splits=nfold, random_state=random_state)
         fold_splits = skf.split(X, y)
     elif fold_type == 'gkf':
         gkf = GroupKFold(n_splits=nfold)
@@ -218,8 +223,8 @@ def get_permutation_importances(data=None, features=None, target='target', group
     return permutation_importance_df
 
 
-def get_feature_importances(data=None, num_features=[], cat_features=[], target='target', group='group', method=[], fold_type='kf', nfold=10, 
-                            task='clf_multiable', random_state=0, ml_model_name='LGBM', ml_early_stopping_rounds=100, pi_score=None, pi_model_base=None, pi_n_repeats=5):
+def get_feature_importances(data=None, num_features=[], cat_features=[], target='target', group='group', method=[], fold_type='kf', nfold=10, task='clf_multiable', 
+                            random_state=0, ml_model_name='LGBM', ml_early_stopping_rounds=100, pi_score=None, pi_model_base=None, pi_n_repeats=5, rank_model=StandardScaler()):
     def get_fi_by_name(data_inside, method_name, model_base, score):
         if method_name == 'corr':
             fi_df = get_corr_importances(data=data_inside, num_features=num_features, target=target)
@@ -233,7 +238,7 @@ def get_feature_importances(data=None, num_features=[], cat_features=[], target=
             else:
                 fi_df = get_anova_importances(data=data_inside, features=cat_features, target=target)
         elif method_name == 'mi':
-            fi_df = get_mutual_info_importances(data=data_inside, features=cat_features, target=target)
+            fi_df = get_mutual_info_importances(data=data_inside, features=cat_features, target=target, random_state=random_state)
         elif method_name == 'ml':
             fi_df = get_ml_importances(data=data_inside, num_features=num_features, cat_features=cat_features, target=target, fold_type=fold_type, group=group,
                                         nfold=nfold, model_name=ml_model_name, task=task, random_state=random_state, early_stopping_rounds=ml_early_stopping_rounds)
@@ -252,7 +257,7 @@ def get_feature_importances(data=None, num_features=[], cat_features=[], target=
                 anova_df = get_anova_importances(data=data_inside, features=num_features, target=target)
                 anova_time = time.time() - start_time
                 start_time = time.time()
-                mi_scores_df = get_mutual_info_importances(data=data_inside, features=cat_features, target=target)
+                mi_scores_df = get_mutual_info_importances(data=data_inside, features=cat_features, target=target, random_state=random_state)
                 mi_time = time.time() - start_time
                 start_time = time.time()
                 ml_importance_df = get_ml_importances(data=data_inside, num_features=num_features, cat_features=cat_features, target=target, fold_type=fold_type, group=group,
@@ -271,7 +276,7 @@ def get_feature_importances(data=None, num_features=[], cat_features=[], target=
                 fi_df = fi_df.merge(ml_importance_df, left_index=True, right_index=True, how='outer')
                 fi_df = fi_df.merge(pi_scores_df, left_index=True, right_index=True, how='outer')
 
-                tt = pd.DataFrame(MinMaxScaler().fit_transform(fi_df), columns=fi_df.columns, index=fi_df.index)
+                tt = pd.DataFrame(rank_model.fit_transform(fi_df), columns=fi_df.columns, index=fi_df.index)
                 tt.drop('PI std', axis=1, inplace=True)
                 rank = tt.sum(axis=1) / len(tt.columns)
 
@@ -301,7 +306,7 @@ def get_feature_importances(data=None, num_features=[], cat_features=[], target=
                 fi_df = fi_df.merge(ml_importance_df, left_index=True, right_index=True, how='outer')
                 fi_df = fi_df.merge(pi_scores_df, left_index=True, right_index=True, how='outer')
 
-                tt = pd.DataFrame(MinMaxScaler().fit_transform(fi_df), columns=fi_df.columns, index=fi_df.index)
+                tt = pd.DataFrame(rank_model.fit_transform(fi_df), columns=fi_df.columns, index=fi_df.index)
                 tt.drop('PI std', axis=1, inplace=True)
                 rank = tt.sum(axis=1) / len(tt.columns) 
 
@@ -327,9 +332,9 @@ def get_feature_importances(data=None, num_features=[], cat_features=[], target=
     # Base Model Selection For Permutation Importances
     if pi_model_base is None:
         if task in ['clf_multiable', 'clf_binary']:
-            pi_model_base = RandomForestClassifier()
+            pi_model_base = RandomForestClassifier(random_state=random_state)
         else:
-            pi_model_base = RandomForestRegressor()
+            pi_model_base = RandomForestRegressor(random_state=random_state)
     
     # Score Selection For Permutation Importances
     if pi_score is None:
@@ -362,7 +367,7 @@ def get_feature_importances(data=None, num_features=[], cat_features=[], target=
         for fi_temp in fi_list:
             fi_df = fi_df.merge(fi_temp, left_index=True, right_index=True, how='outer')
         
-        tt = pd.DataFrame(MinMaxScaler().fit_transform(fi_df), columns=fi_df.columns, index=fi_df.index)
+        tt = pd.DataFrame(rank_model.fit_transform(fi_df), columns=fi_df.columns, index=fi_df.index)
         if 'PI std' in list(tt.columns):
             tt.drop('PI std', axis=1, inplace=True)
         rank = tt.sum(axis=1) / len(tt.columns) 
