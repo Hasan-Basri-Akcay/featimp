@@ -40,7 +40,7 @@ import seaborn as sns
 
 
 random.seed(10)
-cm = sns.light_palette("green", as_cmap=True)
+cm = sns.color_palette("coolwarm", as_cmap=True)
 
 
 def get_corr_importances(data=None, num_features=None, target='target'):
