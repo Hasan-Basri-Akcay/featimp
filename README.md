@@ -29,5 +29,4 @@ _ = get_fi_plots(fi_df, x=['LGBM Imp.', 'LGBM Imp.'], y=['PI mean', 'ANOVA'])
 <img src="/outputs/feature_importance_3d.gif?raw=true"/>
 
 ## Feature Importances Schema
-
-...Working Progress...
+<img src="/outputs/Feature Importances Techniques.png?raw=true"/>
