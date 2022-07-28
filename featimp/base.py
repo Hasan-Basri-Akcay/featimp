@@ -35,8 +35,12 @@ from lightgbm import LGBMRegressor
 from catboost import CatBoostClassifier
 from catboost import CatBoostRegressor
 
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 
 random.seed(10)
+cm = sns.light_palette("green", as_cmap=True)
 
 
 def get_corr_importances(data=None, num_features=None, target='target'):
@@ -379,3 +383,42 @@ def get_feature_importances(data=None, num_features=[], cat_features=[], target=
     else:
         print("Unknown method type!")
         print("method type should be string or list!")
+
+
+def get_fi_plots(fi_df, x=[], y=[], s=200, fontsize=20, alpha=0.8, cmap=cm, ncols=2, figsize=(16, 16)):
+    fi_df_droptt = fi_df.drop('TT (Sec)', axis=0)
+    if type(x) == list:
+        nrows = int(len(x) / ncols)
+        if len(x) % ncols != 0:
+            nrows += 1
+        fig, axes = plt.subplots(nrows, ncols, figsize=(figsize[0], round(nrows*figsize[0]/ncols)))
+        for ax, feature_x, feature_y in zip(axes.ravel()[:len(x)], x, y):
+            ax.scatter(fi_df_droptt[feature_x], fi_df_droptt[feature_y], s=(fi_df_droptt['Rank']+1)*s, c=fi_df_droptt['Rank'], alpha=alpha, cmap=cmap)
+            feature_x_index = np.argwhere(fi_df_droptt.columns==feature_x)
+            feature_y_index = np.argwhere(fi_df_droptt.columns==feature_y)
+            feature_rank_index = np.argwhere(fi_df_droptt.columns=='Rank')
+            ax.set_xlabel(feature_x)
+            ax.set_ylabel(feature_y)
+            for i in range(fi_df_droptt.shape[0]):
+                ax.annotate(fi_df_droptt.index[i], (fi_df_droptt.iloc[i, feature_x_index.item()], fi_df_droptt.iloc[i, feature_y_index.item()]), 
+                            fontsize=(fi_df_droptt.iloc[i, feature_rank_index.item()]+1)*fontsize)
+        for ax in axes.ravel()[len(x):]:
+            ax.set_visible(False)
+    elif type(x) == str:
+        fig, ax = plt.subplots(figsize=figsize)
+        ax.scatter(fi_df_droptt[x], fi_df_droptt[y], s=(fi_df_droptt['Rank']+1)*s, c=fi_df_droptt['Rank'], alpha=alpha, cmap=cmap)
+        feature_x_index = np.argwhere(fi_df_droptt.columns==x)
+        feature_y_index = np.argwhere(fi_df_droptt.columns==y)
+        feature_rank_index = np.argwhere(fi_df_droptt.columns=='Rank')
+        ax.set_xlabel(x)
+        ax.set_ylabel(y)
+        for i in range(fi_df_droptt.shape[0]):
+            ax.annotate(fi_df_droptt.index[i], (fi_df_droptt.iloc[i, feature_x_index.item()], fi_df_droptt.iloc[i, feature_y_index.item()]), 
+                        fontsize=(fi_df_droptt.iloc[i, feature_rank_index.item()]+1)*fontsize)
+    else:
+        print("Unknown feature type!")
+        print("Both feature type should be string or list!")
+    
+    fig.suptitle('Feature Importances 2D Scatter Plot', fontsize=20)
+    plt.show()
+    return fig

@@ -6,8 +6,6 @@ Feature importance for machine learning. Helps with feature understanding, calcu
 pip install featimp
 ```
 
-## Feature Importances Schema
-
 ## Using featimp
 Detailed [Medium post](https://medium.com/@hasan.basri.akcay) on using featimp.
 
@@ -15,7 +13,20 @@ There are a lot of feature importance techniques and each technique calculates d
 
 ```
 from featimp import get_feature_importances
-...
+
+fi_df = get_feature_importances(data=df_diabetes, num_features=num_features, cat_features=cat_features, target='target_clf', task='clf_multiable', method='all')
+fi_df.style.background_gradient(cmap=cm)
 ```
+<img src="/outputs/fi_df.png?raw=true"/>
+
+```
+from featimp import get_fi_plots
+
+_ = get_fi_plots(fi_df, x=['LGBM Imp.', 'LGBM Imp.'], y=['PI mean', 'ANOVA'])
+```
+<img src="/outputs/feature_importances_2d.png?raw=true"/>
+<img src="/outputs/feature_importance_3d.gif?raw=true"/>
+
+## Feature Importances Schema
 
 ...Working Progress...

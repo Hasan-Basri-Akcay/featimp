@@ -7,4 +7,5 @@ from featimp.base import (
     get_ml_importances,
     get_permutation_importances,
     get_feature_importances,
+    get_fi_plots,
 )
