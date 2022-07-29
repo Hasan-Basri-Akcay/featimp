@@ -355,10 +355,10 @@ def get_ml_importances(data=None, num_features=None, cat_features=None, target='
     y = data[[target]]
 
     if fold_type == 'kf':
-        kf = KFold(n_splits=nfold, random_state=random_state)
+        kf = KFold(n_splits=nfold, random_state=random_state, shuffle=True)
         fold_splits = kf.split(X)
     elif fold_type == 'skf':
-        skf = StratifiedKFold(n_splits=nfold, random_state=random_state)
+        skf = StratifiedKFold(n_splits=nfold, random_state=random_state, shuffle=True)
         fold_splits = skf.split(X, y)
     elif fold_type == 'gkf':
         gkf = GroupKFold(n_splits=nfold)
@@ -428,10 +428,10 @@ def get_permutation_importances(data=None, features=None, target='target', group
     y = data[[target]]
 
     if fold_type == 'kf':
-        kf = KFold(n_splits=nfold, random_state=random_state)
+        kf = KFold(n_splits=nfold, random_state=random_state, shuffle=True)
         fold_splits = kf.split(X)
     elif fold_type == 'skf':
-        skf = StratifiedKFold(n_splits=nfold, random_state=random_state)
+        skf = StratifiedKFold(n_splits=nfold, random_state=random_state, shuffle=True)
         fold_splits = skf.split(X, y)
     elif fold_type == 'gkf':
         gkf = GroupKFold(n_splits=nfold)
