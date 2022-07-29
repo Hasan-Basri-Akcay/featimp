@@ -23,7 +23,7 @@ fi_df.style.background_gradient(cmap=cm)
 ```
 from featimp import get_fi_plots
 
-_ = get_fi_plots(fi_df, x=['LGBM Imp.', 'LGBM Imp.'], y=['PI mean', 'ANOVA'])
+_ = get_fi_plots(data=fi_df, x=['LGBM Imp.', 'LGBM Imp.'], y=['PI mean', 'ANOVA'])
 ```
 <img src="/outputs/feature_importances_2d.png?raw=true"/>
 <img src="/outputs/feature_importance_3d.gif?raw=true"/>
