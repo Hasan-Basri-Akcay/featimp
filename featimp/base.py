@@ -39,7 +39,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-random.seed(10)
+np.seterr(invalid='ignore')
 cm = sns.color_palette("coolwarm", as_cmap=True)
 
 
@@ -324,7 +324,7 @@ def get_chi2_crosstab_importances(data=None, cat_features=None, target='target')
 def get_chi2_importances(data=None, features=None, target='target'):
     if len(features) < 1:
         return pd.DataFrame(columns=['Chi_Square'])
-    chi2_scores = chi2(data[features], data[[target]])
+    chi2_scores = chi2(data[features], data[[target]].values.ravel())
     chi2_df = pd.DataFrame(chi2_scores[0], columns=['Chi_Square'], index=features)
     chi2_df.sort_values('Chi_Square', ascending=False, inplace=True)
     return chi2_df
@@ -333,7 +333,7 @@ def get_chi2_importances(data=None, features=None, target='target'):
 def get_anova_importances(data=None, features=None, target='target'):
     if len(features) < 1:
         return pd.DataFrame(columns=['ANOVA'])
-    anova_scores = f_regression(data[features], data[[target]])
+    anova_scores = f_regression(data[features], data[[target]].values.ravel())
     anova_df = pd.DataFrame(anova_scores[0], columns=['ANOVA'], index=features)
     anova_df.sort_values('ANOVA', ascending=False, inplace=True)
     return anova_df
@@ -342,7 +342,7 @@ def get_anova_importances(data=None, features=None, target='target'):
 def get_mutual_info_importances(data=None, features=None, target='target', random_state=0):
     if len(features) < 1:
         return pd.DataFrame(columns=['MI Scores'])
-    mi_scores = mutual_info_classif(data[features], data[target], random_state=random_state)
+    mi_scores = mutual_info_classif(data[features], data[target].values.ravel(), random_state=random_state)
     mi_scores_df = pd.DataFrame(mi_scores, columns=["MI Scores"], index=features)
     mi_scores_df = mi_scores_df.sort_values('MI Scores', ascending=False)
     return mi_scores_df
@@ -407,8 +407,8 @@ def get_ml_importances(data=None, num_features=None, cat_features=None, target='
             print("Unknown model name!")
             print("model names:", ['LGBM', 'CATBOOST'])
         
-        eval_set = [(X_test, y_test)]
-        model.fit(X_train, y_train, eval_set=eval_set, early_stopping_rounds=early_stopping_rounds, verbose=0)
+        eval_set = [(X_test, y_test.values.ravel())]
+        model.fit(X_train, y_train.values.ravel(), eval_set=eval_set, early_stopping_rounds=early_stopping_rounds, verbose=0)
 
         ml_importance_df[model_name+' Imp.'] += model.feature_importances_ / nfold
 
@@ -448,8 +448,8 @@ def get_permutation_importances(data=None, features=None, target='target', group
         y_train, y_test = y.loc[train_index,:], y.loc[test_index,:]
         
         model = clone(model_base)
-        model.fit(X_train, y_train)
-        r = permutation_importance(model, X_test, y_test, n_repeats=n_repeats, random_state=random_state, 
+        model.fit(X_train, y_train.values.ravel())
+        r = permutation_importance(model, X_test, y_test.values.ravel(), n_repeats=n_repeats, random_state=random_state, 
                                     scoring=score)
         permutation_importance_df['PI mean'] += r.importances_mean / nfold
         permutation_importance_df['PI std'] += r.importances_std / nfold
