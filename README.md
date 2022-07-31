@@ -1,3 +1,6 @@
+# Don't Miss The Contents
+Medium: https://medium.com/subscribe/@hasan.basri.akcay
+
 # featimp
 Feature importance for machine learning. Helps with feature understanding, calculating feature importances, feature debugging, and leakage detection.
 
