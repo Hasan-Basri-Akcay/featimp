@@ -91,6 +91,14 @@ def get_feature_importances(data=None, num_features=[], cat_features=[], target=
                                                 score=score, model_base=model_base, random_state=random_state, n_repeats=pi_n_repeats)
         elif method_name == 'all':
             if task in ['clf_multiable', 'clf_binary']:
+                if task == 'clf_binary':
+                    start_time = time.time()
+                    corr_df = get_corr_importances(data=data_inside, num_features=num_features, target=target)
+                    corr_df = corr_df.abs()
+                    corr_time = time.time() - start_time
+                else:
+                    corr_df = pd.DataFrame(columns=['Corr'])
+                    corr_time = 0.0
                 start_time = time.time()
                 cat_corr_df = get_chi2_crosstab_importances(data=data_inside, cat_features=cat_features, target=target)
                 cat_corr_time = time.time() - start_time
@@ -113,6 +121,7 @@ def get_feature_importances(data=None, num_features=[], cat_features=[], target=
                 pi_time = time.time() - start_time
                 
                 fi_df = pd.DataFrame()
+                fi_df = fi_df.merge(corr_df, left_index=True, right_index=True, how='outer')
                 fi_df = fi_df.merge(cat_corr_df, left_index=True, right_index=True, how='outer')
                 fi_df = fi_df.merge(chi2_df, left_index=True, right_index=True, how='outer')
                 fi_df = fi_df.merge(anova_df, left_index=True, right_index=True, how='outer')
@@ -126,7 +135,7 @@ def get_feature_importances(data=None, num_features=[], cat_features=[], target=
 
                 fi_df['Rank'] = rank
                 fi_df.sort_values('Rank', ascending=False, inplace=True)
-                fi_df.loc['TT (Sec)'] = [cat_corr_time, chi2_time, anova_time, mi_time, ml_time, pi_time, 0, 0]
+                fi_df.loc['TT (Sec)'] = [corr_time, cat_corr_time, chi2_time, anova_time, mi_time, ml_time, pi_time, 0, 0]
             else:
                 start_time = time.time()
                 corr_df = get_corr_importances(data=data_inside, num_features=num_features, target=target)
