@@ -1,5 +1,5 @@
 # Don't Miss The Contents
-Medium: https://medium.com/subscribe/@hasan.basri.akcay
+Medium: https://medium.com/subscribe/@hasan.basri.akcay <br />
 LinkedIn: https://www.linkedin.com/in/hasan-basri-akcay
 
 # featimp
