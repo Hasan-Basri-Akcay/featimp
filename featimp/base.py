@@ -43,7 +43,7 @@ np.seterr(invalid='ignore')
 cm = sns.color_palette("coolwarm", as_cmap=True)
 
 
-def get_feature_importances(data=None, num_features=[], cat_features=[], target='target', group='group', method=[], fold_type='kf', nfold=10, task='clf_multiable', 
+def get_feature_importances(data=None, num_features=[], cat_features=[], bool_features=[], target='target', group='group', method=[], fold_type='kf', nfold=10, task='clf_multiable', 
                             random_state=0, ml_model_name='LGBM', ml_early_stopping_rounds=100, pi_score=None, pi_model_base=None, pi_n_repeats=5, rank_model=StandardScaler()):
     '''
     Calculates the feature importances by using multiple methods and ranking them.
@@ -71,53 +71,56 @@ def get_feature_importances(data=None, num_features=[], cat_features=[], target=
     '''
     def get_fi_by_name(data_inside, method_name, model_base, score):
         if method_name == 'corr':
-            fi_df = get_corr_importances(data=data_inside, num_features=num_features, target=target)
+            fi_df = get_corr_importances(data=data_inside, num_features=num_features+bool_features, target=target)
         elif method_name == 'chi2_crosstab':
-            fi_df = get_chi2_crosstab_importances(data=data_inside, cat_features=cat_features, target=target)
+            fi_df = get_chi2_crosstab_importances(data=data_inside, cat_features=cat_features+bool_features, target=target)
         elif method_name == 'chi2':
-            fi_df = get_chi2_importances(data=data_inside, features=cat_features, target=target)
+            fi_df = get_chi2_importances(data=data_inside, features=cat_features+bool_features, target=target)
         elif method_name == 'anova':
             if task in ['clf_multiable', 'clf_binary']:
-                fi_df = get_anova_importances(data=data_inside, features=num_features, target=target)
+                fi_df = get_anova_importances(data=data_inside, features=num_features+bool_features, target=target)
             else:
-                fi_df = get_anova_importances(data=data_inside, features=cat_features, target=target)
+                fi_df = get_anova_importances(data=data_inside, features=cat_features+bool_features, target=target)
         elif method_name == 'mi':
-            fi_df = get_mutual_info_importances(data=data_inside, features=cat_features, target=target, random_state=random_state)
+            print(data_inside[cat_features+bool_features+[target]])
+            fi_df = get_mutual_info_importances(data=data_inside, features=cat_features+bool_features, target=target, random_state=random_state)
+            print(fi_df)
         elif method_name == 'ml':
-            fi_df = get_ml_importances(data=data_inside, num_features=num_features, cat_features=cat_features, target=target, fold_type=fold_type, group=group,
-                                        nfold=nfold, model_name=ml_model_name, task=task, random_state=random_state, early_stopping_rounds=ml_early_stopping_rounds)
+            fi_df = get_ml_importances(data=data_inside, num_features=num_features, cat_features=cat_features, bool_features=bool_features, target=target, fold_type=fold_type, 
+                                        group=group, nfold=nfold, model_name=ml_model_name, task=task, random_state=random_state, early_stopping_rounds=ml_early_stopping_rounds)
         elif method_name == 'pi':
-            fi_df = get_permutation_importances(data=data_inside, features=num_features+cat_features, target=target, fold_type=fold_type, group=group, nfold=nfold, 
+            fi_df = get_permutation_importances(data=data_inside, features=num_features+cat_features+bool_features, target=target, fold_type=fold_type, group=group, nfold=nfold, 
                                                 score=score, model_base=model_base, random_state=random_state, n_repeats=pi_n_repeats)
         elif method_name == 'all':
             if task in ['clf_multiable', 'clf_binary']:
                 if task == 'clf_binary':
                     start_time = time.time()
-                    corr_df = get_corr_importances(data=data_inside, num_features=num_features, target=target)
+                    corr_df = get_corr_importances(data=data_inside, num_features=num_features+bool_features, target=target)
                     corr_df = corr_df.abs()
                     corr_time = time.time() - start_time
                 else:
                     corr_df = pd.DataFrame(columns=['Corr'])
                     corr_time = 0.0
                 start_time = time.time()
-                cat_corr_df = get_chi2_crosstab_importances(data=data_inside, cat_features=cat_features, target=target)
+                cat_corr_df = get_chi2_crosstab_importances(data=data_inside, cat_features=cat_features+bool_features, target=target)
                 cat_corr_time = time.time() - start_time
                 start_time = time.time()
-                chi2_df = get_chi2_importances(data=data_inside, features=cat_features, target=target)
+                chi2_df = get_chi2_importances(data=data_inside, features=cat_features+bool_features, target=target)
                 chi2_time = time.time() - start_time
                 start_time = time.time()
-                anova_df = get_anova_importances(data=data_inside, features=num_features, target=target)
+                anova_df = get_anova_importances(data=data_inside, features=num_features+bool_features, target=target)
                 anova_time = time.time() - start_time
                 start_time = time.time()
-                mi_scores_df = get_mutual_info_importances(data=data_inside, features=cat_features, target=target, random_state=random_state)
+                mi_scores_df = get_mutual_info_importances(data=data_inside, features=cat_features+bool_features, target=target, random_state=random_state)
                 mi_time = time.time() - start_time
                 start_time = time.time()
-                ml_importance_df = get_ml_importances(data=data_inside, num_features=num_features, cat_features=cat_features, target=target, fold_type=fold_type, group=group,
-                                        nfold=nfold, model_name=ml_model_name, task=task, random_state=random_state, early_stopping_rounds=ml_early_stopping_rounds)
+                ml_importance_df = get_ml_importances(data=data_inside, num_features=num_features, cat_features=cat_features, bool_features=bool_features, target=target, 
+                                        fold_type=fold_type, group=group, nfold=nfold, model_name=ml_model_name, task=task, random_state=random_state, 
+                                        early_stopping_rounds=ml_early_stopping_rounds)
                 ml_time = time.time() - start_time
                 start_time = time.time()
-                pi_scores_df = get_permutation_importances(data=data_inside, features=num_features+cat_features, target=target, fold_type=fold_type, group=group, nfold=nfold, 
-                                                score=score, model_base=model_base, random_state=random_state, n_repeats=pi_n_repeats)
+                pi_scores_df = get_permutation_importances(data=data_inside, features=num_features+cat_features+bool_features, target=target, fold_type=fold_type, group=group, 
+                                                nfold=nfold, score=score, model_base=model_base, random_state=random_state, n_repeats=pi_n_repeats)
                 pi_time = time.time() - start_time
                 
                 fi_df = pd.DataFrame()
@@ -131,25 +134,29 @@ def get_feature_importances(data=None, num_features=[], cat_features=[], target=
 
                 tt = pd.DataFrame(rank_model.fit_transform(fi_df), columns=fi_df.columns, index=fi_df.index)
                 tt.drop('PI std', axis=1, inplace=True)
-                rank = tt.sum(axis=1) / len(tt.columns)
+                rank = tt.mean(axis=1) / len(tt.columns)
 
                 fi_df['Rank'] = rank
                 fi_df.sort_values('Rank', ascending=False, inplace=True)
                 fi_df.loc['TT (Sec)'] = [corr_time, cat_corr_time, chi2_time, anova_time, mi_time, ml_time, pi_time, 0, 0]
+
+                if task == 'clf_multiable':
+                    fi_df.drop('Corr', axis=1, inplace=True)
             else:
                 start_time = time.time()
-                corr_df = get_corr_importances(data=data_inside, num_features=num_features, target=target)
+                corr_df = get_corr_importances(data=data_inside, num_features=num_features+bool_features, target=target)
                 corr_df = corr_df.abs()
                 corr_time = time.time() - start_time
                 start_time = time.time()
-                anova_df = get_anova_importances(data=data_inside, features=cat_features, target=target)
+                anova_df = get_anova_importances(data=data_inside, features=cat_features+bool_features, target=target)
                 anova_time = time.time() - start_time
                 start_time = time.time()
-                ml_importance_df = get_ml_importances(data=data_inside, num_features=num_features, cat_features=cat_features, target=target, fold_type=fold_type, group=group,
-                                        nfold=nfold, model_name=ml_model_name, task=task, random_state=random_state, early_stopping_rounds=ml_early_stopping_rounds)
+                ml_importance_df = get_ml_importances(data=data_inside, num_features=num_features, cat_features=cat_features, bool_features=bool_features, target=target, 
+                                        fold_type=fold_type, group=group, nfold=nfold, model_name=ml_model_name, task=task, random_state=random_state, 
+                                        early_stopping_rounds=ml_early_stopping_rounds)
                 ml_time = time.time() - start_time
                 start_time = time.time()
-                pi_scores_df = get_permutation_importances(data=data_inside, features=num_features+cat_features, target=target, fold_type=fold_type, group=group, nfold=nfold, 
+                pi_scores_df = get_permutation_importances(data=data_inside, features=num_features+cat_features+bool_features, target=target, fold_type=fold_type, group=group, nfold=nfold, 
                                                 score=score, model_base=model_base, random_state=random_state, n_repeats=pi_n_repeats)
                 pi_time = time.time() - start_time
 
@@ -161,7 +168,7 @@ def get_feature_importances(data=None, num_features=[], cat_features=[], target=
 
                 tt = pd.DataFrame(rank_model.fit_transform(fi_df), columns=fi_df.columns, index=fi_df.index)
                 tt.drop('PI std', axis=1, inplace=True)
-                rank = tt.sum(axis=1) / len(tt.columns) 
+                rank = tt.mean(axis=1) / len(tt.columns) 
 
                 fi_df['Rank'] = rank
                 fi_df.sort_values('Rank', ascending=False, inplace=True)
@@ -223,7 +230,7 @@ def get_feature_importances(data=None, num_features=[], cat_features=[], target=
         tt = pd.DataFrame(rank_model.fit_transform(fi_df), columns=fi_df.columns, index=fi_df.index)
         if 'PI std' in list(tt.columns):
             tt.drop('PI std', axis=1, inplace=True)
-        rank = tt.sum(axis=1) / len(tt.columns) 
+        rank = tt.mean(axis=1) / len(tt.columns) 
 
         fi_df['Rank'] = rank
         fi_df.sort_values('Rank', ascending=False, inplace=True)
@@ -351,15 +358,17 @@ def get_anova_importances(data=None, features=None, target='target'):
 def get_mutual_info_importances(data=None, features=None, target='target', random_state=0):
     if len(features) < 1:
         return pd.DataFrame(columns=['MI Scores'])
-    mi_scores = mutual_info_classif(data[features], data[target].values.ravel(), random_state=random_state)
+    mi_scores = []
+    for feature in features:
+        mi_scores.append(mutual_info_classif(data[[feature]], data[target].values.ravel(), random_state=random_state))
     mi_scores_df = pd.DataFrame(mi_scores, columns=["MI Scores"], index=features)
     mi_scores_df = mi_scores_df.sort_values('MI Scores', ascending=False)
     return mi_scores_df
 
 
-def get_ml_importances(data=None, num_features=None, cat_features=None, target='target', group='group', fold_type='kf', 
+def get_ml_importances(data=None, num_features=[], cat_features=[], bool_features=[], target='target', group='group', fold_type='kf', 
                         nfold=10, model_name='LGBM', task='clf_multiable', random_state=0, early_stopping_rounds=100):
-    features = num_features+cat_features
+    features = num_features+cat_features+bool_features
     X = data[features]
     y = data[[target]]
 
@@ -383,6 +392,7 @@ def get_ml_importances(data=None, num_features=None, cat_features=None, target='
         y_train, y_test = y.loc[train_index,:], y.loc[test_index,:]
 
         if model_name == 'LGBM':
+            num_features = list(num_features) + list(bool_features)
             if task == 'clf_binary':
                 class_weight = (len(y_train.values) - np.sum(y_train.values)) / np.sum(y_train.values)
                 model = LGBMClassifier(scale_pos_weight=class_weight, random_state=random_state)
@@ -394,6 +404,7 @@ def get_ml_importances(data=None, num_features=None, cat_features=None, target='
                 print("Unknown task name!")
                 print("task names:", ['clf_binary', 'clf_multiable', 'reg'])
         elif model_name == 'CATBOOST':
+            cat_features = list(cat_features) + list(bool_features)
             if task == 'clf_binary':
                 class_weight = (len(y_train.values) - np.sum(y_train.values)) / np.sum(y_train.values)
                 model = CatBoostClassifier(scale_pos_weight=class_weight, cat_features=cat_features, random_state=random_state)
