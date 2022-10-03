@@ -185,7 +185,7 @@ def get_feature_importances(data=None, num_features=[], cat_features=[], bool_fe
     df_enc = data.copy()
     if task in ['clf_multiable', 'clf_binary']:
         df_enc[cat_features] = OrdinalEncoder().fit_transform(df_enc[cat_features])
-        df_enc[[target]] = pd.DataFrame(LabelEncoder().fit_transform(df_enc[[target]]), columns=[target])
+        df_enc[target] = LabelEncoder().fit_transform(df_enc[[target]])
     else:
         df_enc[cat_features] = OrdinalEncoder().fit_transform(df_enc[cat_features])
 
@@ -207,6 +207,9 @@ def get_feature_importances(data=None, num_features=[], cat_features=[], bool_fe
         else:
             print("Unknown task name!")
             print("task names:", ['clf_binary', 'clf_multiable', 'reg'])
+    
+    # Reset Index For Fold
+    df_enc.reset_index(inplace=True, drop=True)
 
     ### Feature Importances Calculations
     if type(method) == str:
@@ -485,3 +488,10 @@ def get_permutation_importances(data=None, features=None, target='target', group
     return permutation_importance_df
 
 
+def display_feature_importances(data=None, color_palette='coolwarm', nan_background="white", nan_write_color='black'):
+    cm = sns.color_palette(color_palette, as_cmap=True)
+    selected_features = list(data.index)
+    selected_features.remove('TT (Sec)')
+    indices = pd.IndexSlice[selected_features, :]
+    display(data.style.background_gradient(cmap=cm, axis=0, subset=indices).applymap(lambda x: f'background: {nan_background}' if pd.isnull(x) else 
+                                                                            '').applymap(lambda x: f'color: {nan_write_color}' if pd.isnull(x) else ''))
