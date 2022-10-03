@@ -17,10 +17,11 @@ There are a lot of feature importance techniques and each technique calculates d
 
 ```
 from featimp import get_feature_importances
+from featimp import display_feature_importances
 
 fi_df = get_feature_importances(data=df_diabetes, num_features=num_features, cat_features=cat_features, 
                                 target='target_clf', task='clf_multiable', method='all')
-fi_df.style.background_gradient(cmap=cm)
+display_feature_importances(data=fi_df)
 ```
 <img src="/outputs/fi_df.png?raw=true"/>
 
