@@ -5,6 +5,13 @@ LinkedIn: https://www.linkedin.com/in/hasan-basri-akcay
 # featimp
 Feature importance for machine learning. Helps with feature understanding, calculating feature importances, feature debugging, and leakage detection.
 
+[![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/Hasan-Basri-Akcay/featimp/python-publish.yml?label=python-package&logo=github)](https://github.com/Hasan-Basri-Akcay/featimp/actions)
+[![Docs](https://img.shields.io/badge/docs-passing-green)](https://medium.com/@hasan.basri.akcay)
+[![PyPI](https://img.shields.io/pypi/v/featimp?logo=python&color=blue)](https://pypi.org/project/featimp/)
+[![Python](https://img.shields.io/pypi/pyversions/featimp?logo=python)](https://pypi.org/project/featimp/)
+[![License](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org/license/mit/)
+![GitHub followers](https://img.shields.io/github/followers/Hasan-Basri-Akcay?logo=github)
+
 ## Installation
 ```
 pip install featimp
@@ -14,13 +21,6 @@ pip install featimp
 Detailed [Medium post](https://medium.com/@hasan.basri.akcay) on using featimp.
 
 There are a lot of feature importance techniques and each technique calculates different importance. Some of them are suitable for numerical to numerical importance, some of them are ideal for categorical to numerical significance and some of them are suitable for categorical to categorical importance. featimp automatically calculates feature importances and ranks them for you.
-
-[![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/Hasan-Basri-Akcay/featimp/python-publish.yml?label=python-package&logo=github)](https://github.com/Hasan-Basri-Akcay/featimp/actions)
-[![Docs](https://img.shields.io/badge/docs-passing-green)](https://medium.com/@hasan.basri.akcay)
-[![PyPI](https://img.shields.io/pypi/v/featimp?logo=python&color=blue)](https://pypi.org/project/featimp/)
-[![Python](https://img.shields.io/pypi/pyversions/featimp?logo=python)](https://pypi.org/project/featimp/)
-[![License](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org/license/mit/)
-![GitHub followers](https://img.shields.io/github/followers/Hasan-Basri-Akcay?logo=github)
 
 ```
 from featimp import get_feature_importances
